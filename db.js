@@ -1,32 +1,22 @@
+// db.js
 const mysql = require('mysql2');
 
-const config = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT
-};
-
-// LOGIN DATABASE
-const loginDB = mysql.createConnection({
-  ...config,
-  database: 'website_db'
+// Use environment variables for security
+const connection = mysql.createConnection({
+  host: process.env.DB_HOST || 'maglev.proxy.rlwy.net',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || 'DtSwIQBGuKAkGJlhZpuFKarMzdbSTKdY',
+  database: process.env.DB_NAME || 'railway',
+  port: process.env.DB_PORT || 27507,
 });
 
-// CONTACT DATABASE
-const contactDB = mysql.createConnection({
-  ...config,
-  database: 'contact_db'
+// Connect to MySQL
+connection.connect((err) => {
+  if (err) {
+    console.error('Database connection failed:', err);
+    process.exit(1);
+  }
+  console.log('Connected to MySQL database!');
 });
 
-loginDB.connect(err => {
-  if (err) console.log('Login DB Error:', err);
-  else console.log('Login DB Connected');
-});
-
-contactDB.connect(err => {
-  if (err) console.log('Contact DB Error:', err);
-  else console.log('Contact DB Connected');
-});
-
-module.exports = { loginDB, contactDB };
+module.exports = connection;
