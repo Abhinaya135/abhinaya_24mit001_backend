@@ -1,7 +1,5 @@
-// db.js
-const mysql = require('mysql2');
 
-// Use environment variables for security
+const mysql = require('mysql2');
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || 'maglev.proxy.rlwy.net',
   user: process.env.DB_USER || 'root',
@@ -10,7 +8,7 @@ const connection = mysql.createConnection({
   port: process.env.DB_PORT || 27507,
 });
 
-// Connect to MySQL
+
 connection.connect((err) => {
   if (err) {
     console.error('Database connection failed:', err);
@@ -20,3 +18,4 @@ connection.connect((err) => {
 });
 
 module.exports = connection;
+
