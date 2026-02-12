@@ -14,23 +14,27 @@ app.get('/', (req, res) => {
 });
 
 // -------- Create tables if not exist --------
-connection.query(`
-CREATE TABLE IF NOT EXISTS users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(255) NOT NULL,
-  password VARCHAR(255) NOT NULL
-);
-`);
+const createTables = () => {
+  connection.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(255) NOT NULL,
+      password VARCHAR(255) NOT NULL
+    );
+  `);
 
-connection.query(`
-CREATE TABLE IF NOT EXISTS contacts (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255),
-  email VARCHAR(255),
-  message TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-`);
+  connection.query(`
+    CREATE TABLE IF NOT EXISTS contacts (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255),
+      email VARCHAR(255),
+      message TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+};
+
+createTables();
 
 // -------- LOGIN / REGISTER --------
 app.post('/register', (req, res) => {
@@ -38,7 +42,7 @@ app.post('/register', (req, res) => {
   connection.query(
     'INSERT INTO users (username, password) VALUES (?, ?)',
     [username, password],
-    (err, result) => {
+    (err) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ message: 'User registered successfully' });
     }
@@ -52,11 +56,8 @@ app.post('/login', (req, res) => {
     [username, password],
     (err, results) => {
       if (err) return res.status(500).json({ error: err.message });
-      if (results.length > 0) {
-        res.json({ message: 'Login successful' });
-      } else {
-        res.status(401).json({ message: 'Invalid credentials' });
-      }
+      if (results.length > 0) res.json({ message: 'Login successful' });
+      else res.status(401).json({ message: 'Invalid credentials' });
     }
   );
 });
@@ -67,7 +68,7 @@ app.post('/contact', (req, res) => {
   connection.query(
     'INSERT INTO contacts (name, email, message) VALUES (?, ?, ?)',
     [name, email, message],
-    (err, result) => {
+    (err) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ message: 'Message sent successfully' });
     }
@@ -75,6 +76,7 @@ app.post('/contact', (req, res) => {
 });
 
 // -------- START SERVER --------
+// MUST use process.env.PORT for Render
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
