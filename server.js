@@ -1,14 +1,19 @@
 // server.js
 const express = require('express');
 const bodyParser = require('body-parser');
-const connection = require('./db');
 const cors = require('cors');
+const connection = require('./db');
 
 const app = express();
-app.use(cors()); // allow frontend requests
+app.use(cors());
 app.use(bodyParser.json());
 
-// Create tables if not exist
+// -------- Test route --------
+app.get('/', (req, res) => {
+  res.send('Backend is live!');
+});
+
+// -------- Create tables if not exist --------
 connection.query(`
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
