@@ -1,49 +1,76 @@
+// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
+const connection = require('./db');
 const cors = require('cors');
-const { loginDB, contactDB } = require('./db');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors()); // allow frontend requests
+app.use(bodyParser.json());
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json());
+// Create tables if not exist
+connection.query(`
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(255) NOT NULL,
+  password VARCHAR(255) NOT NULL
+);
+`);
 
-// Test Route
-app.get('/', (req, res) => {
-  res.send('Backend running successfully 🚀');
+connection.query(`
+CREATE TABLE IF NOT EXISTS contacts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255),
+  email VARCHAR(255),
+  message TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`);
+
+// -------- LOGIN / REGISTER --------
+app.post('/register', (req, res) => {
+  const { username, password } = req.body;
+  connection.query(
+    'INSERT INTO users (username, password) VALUES (?, ?)',
+    [username, password],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: 'User registered successfully' });
+    }
+  );
 });
 
-// LOGIN API
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-
-  const sql = 'SELECT * FROM users WHERE username=? AND password=?';
-  loginDB.query(sql, [username, password], (err, result) => {
-    if (err) return res.status(500).json({ error: err });
-
-    if (result.length > 0) {
-      res.json({ success: true, message: 'Login successful' });
-    } else {
-      res.json({ success: false, message: 'Invalid login' });
+  connection.query(
+    'SELECT * FROM users WHERE username = ? AND password = ?',
+    [username, password],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (results.length > 0) {
+        res.json({ message: 'Login successful' });
+      } else {
+        res.status(401).json({ message: 'Invalid credentials' });
+      }
     }
-  });
+  );
 });
 
-// CONTACT API
-app.post('/submit', (req, res) => {
+// -------- CONTACT FORM --------
+app.post('/contact', (req, res) => {
   const { name, email, message } = req.body;
-
-  const sql = 'INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)';
-  contactDB.query(sql, [name, email, message], err => {
-    if (err) return res.status(500).json({ error: err });
-
-    res.json({ success: true, message: 'Message sent successfully' });
-  });
+  connection.query(
+    'INSERT INTO contacts (name, email, message) VALUES (?, ?, ?)',
+    [name, email, message],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: 'Message sent successfully' });
+    }
+  );
 });
 
+// -------- START SERVER --------
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
